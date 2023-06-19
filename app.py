@@ -2,27 +2,36 @@
 from flask import Flask, request, jsonify, render_template, Response
 import requests
 import json
-import os
 
 app = Flask(__name__)
 
 # 从配置文件中settings加载配置
-app.config.from_pyfile('settings.py')
+app.config.from_pyfile("settings.py")
+
 
 @app.route("/", methods=["GET"])
 def index():
     return render_template("chat.html")
 
+
 @app.route("/chat", methods=["POST"])
 def chat():
     messages = request.form.get("prompts", None)
     apiKey = request.form.get("apiKey", None)
-    model = request.form.get("model", "gpt-3.5-turbo")
+    model = request.form.get("model", "gpt-3.5-turbo-0613")
     if messages is None:
-        return jsonify({"error": {"message": "请输入prompts！", "type": "invalid_request_error", "code": ""}})
+        return jsonify(
+            {
+                "error": {
+                    "message": "请输入prompts！",
+                    "type": "invalid_request_error",
+                    "code": "",
+                }
+            }
+        )
 
     if apiKey is None:
-        apiKey = os.environ.get('OPENAI_API_KEY',app.config["OPENAI_API_KEY"])
+        apiKey = app.config["OPENAI_API_KEY"]
 
     headers = {
         "Content-Type": "application/json",
@@ -35,7 +44,6 @@ def chat():
     data = {
         "messages": prompts,
         "model": model,
-        "max_tokens": 1024,
         "temperature": 0.5,
         "top_p": 1,
         "n": 1,
@@ -48,10 +56,12 @@ def chat():
             headers=headers,
             json=data,
             stream=True,
-            timeout=(10, 10)  # 连接超时时间为10秒，读取超时时间为10秒
+            timeout=(10, 10),  # 连接超时时间为10秒，读取超时时间为10秒
         )
     except requests.exceptions.Timeout:
-        return jsonify({"error": {"message": "请求超时，请稍后再试！", "type": "timeout_error", "code": ""}})
+        return jsonify(
+            {"error": {"message": "请求超时，请稍后再试！", "type": "timeout_error", "code": ""}}
+        )
 
     # 迭代器实现流式响应
     def generate():
@@ -65,7 +75,7 @@ def chat():
                     errorStr += streamStr.strip()  # 错误流式数据累加
                     continue
                 delData = streamDict["choices"][0]
-                if delData["finish_reason"] != None :
+                if delData["finish_reason"] != None:
                     break
                 else:
                     if "content" in delData["delta"]:
@@ -78,7 +88,8 @@ def chat():
             with app.app_context():
                 yield errorStr
 
-    return Response(generate(), content_type='application/octet-stream')
+    return Response(generate(), content_type="application/octet-stream")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     app.run(port=5000)
