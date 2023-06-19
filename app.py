@@ -14,10 +14,6 @@ OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 if OPENAI_API_KEY:
     app.config["OPENAI_API_KEY"] = OPENAI_API_KEY
 
-URL = os.environ.get("URL")
-if URL:
-    app.config["URL"] = URL
-
 
 @app.route("/", methods=["GET"])
 def index():
