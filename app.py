@@ -2,11 +2,21 @@
 from flask import Flask, request, jsonify, render_template, Response
 import requests
 import json
+import os
 
 app = Flask(__name__)
 
 # 从配置文件中settings加载配置
 app.config.from_pyfile("settings.py")
+
+# 从环境变量中读取 OPENAI_API_KEY 和 URL
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
+if OPENAI_API_KEY:
+    app.config["OPENAI_API_KEY"] = OPENAI_API_KEY
+
+URL = os.environ.get("URL")
+if URL:
+    app.config["URL"] = URL
 
 
 @app.route("/", methods=["GET"])
