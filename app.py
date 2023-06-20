@@ -24,7 +24,7 @@ def index():
 def chat():
     messages = request.form.get("prompts", None)
     apiKey = request.form.get("apiKey", None)
-    model = request.form.get("model", "gpt-3.5-turbo-0613")
+    model = request.form.get("model", "gpt-3.5-turbo-16k")
     if messages is None:
         return jsonify(
             {
